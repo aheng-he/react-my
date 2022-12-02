@@ -13,7 +13,7 @@ export default function logger(prefix, workInProgress) {
     } else if (tagName === "HostText") {
         str += ` ${workInProgress.pendingProps} `;
     }
-    console.log(`${prefix} ${str}`);
+    console.log(`${prefix} ${str}`, workInProgress);
 }
 
 let indent = { number: 0 };

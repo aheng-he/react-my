@@ -1,7 +1,8 @@
 import logger from 'shared/logger';
 import { HostComponent, HostRoot, HostText } from './ReactWorkTags';
 import { processUpdateQueue } from './ReactFiberClassUpdateQueue';
-import { mountChildFibers, reconcileChildrenFibers } from './ReactChildFiber';
+import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber';
+import { shouldSetTextContent } from './ReactDOMHostConfig';
 
 /**
  * 根据新的虚拟DOM生成新的Fiber链表
@@ -16,7 +17,7 @@ function reconcileChildren(current, workInProgress, nextChildren){
     }else{
         // 如果有老fiber的话，做DOM-DIFF
         // 拿老的子fiber链表与新的子虚拟DOM进行比较，最小话更新
-        workInProgress.child = reconcileChildrenFibers(workInProgress, current.child, nextChildren)
+        workInProgress.child = reconcileChildFibers(workInProgress, current.child, nextChildren)
     }
 }
 
@@ -30,11 +31,19 @@ function updateHostRoot(current, workInProgress){
     // 协调子节点 DOM-DIFF
     reconcileChildren(current, workInProgress, nextChildren)
 
-    return updateHostComponent(current, workInProgress)
+    return workInProgress.child; //{tag:5,type:'h1'}
 }
 
-function updateHostComponent(current, workInProgress){
-
+function updateHostComponent(current, workInProgress) {
+    const { type } = workInProgress;
+    const nextProps = workInProgress.pendingProps;
+    let nextChildren = nextProps.children;
+    const isDirectTextChild = shouldSetTextContent(type, nextProps);
+    if (isDirectTextChild) {
+      nextChildren = null;
+    }
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
 }
 
 /**
@@ -42,7 +51,7 @@ function updateHostComponent(current, workInProgress){
  * @param {*} current 老的fiber
  * @param {*} workInProgress 新的fiber
  */
-export function ReactFiberBeginWork(current, workInProgress){
+export function beginWork(current, workInProgress){
     logger('beginwork', workInProgress)
 
     switch(workInProgress.tag){

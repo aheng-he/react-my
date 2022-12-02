@@ -1,3 +1,3 @@
-const {assign} = Object.prototype;
+const {assign} = Object;
 
 export default assign;

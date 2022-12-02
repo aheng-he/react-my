@@ -1,5 +1,5 @@
 import { NoFlags } from "./ReactFiberFlags";
-import { HostRoot } from "./ReactWorkTags";
+import { HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 
 export function FiberNode(tag, pendingProps, key){
     this.tag = tag;
@@ -45,7 +45,7 @@ export function createHostRootFiber(){
 // reclaim the extra memory if needed.
 //我们使用双缓冲池技术，因为我们知道一棵树最多只需要两个版本
 //我们将“其他”未使用的我们可以自由重用的节点
-//这是延迟创建的，以避免分配从未更新的内容的额外对象。它还允许我们如果需要，回收额外的内+存
+//这是延迟创建的，以避免分配从未更新的内容的额外对象。它还允许我们如果需要，回收额外的内存
 /**
  * 基于老的fiber和新的属性创建新的fiber
  * @param {*} current 老fiber
@@ -73,4 +73,26 @@ export function createWorkInProgress(current, pendingProps){
     workInProgress.sibling = current.sibling;
     workInProgress.index = current.index;
     return workInProgress
+}
+
+export function createFiberFromTypeAndProps(type, key, pendingProps) {
+    let fiberTag = IndeterminateComponent;
+    if (typeof type === "string") {
+    fiberTag = HostComponent;
+    }
+    const fiber = createFiber(fiberTag, pendingProps, key);
+    fiber.type = type;
+    return fiber;
+}
+export function createFiberFromElement(element) {
+    const { type } = element;
+    const { key } = element;
+    const pendingProps = element.props;
+    const fiber = createFiberFromTypeAndProps(type, key, pendingProps);
+    return fiber;
+}
+
+export function createFiberFromText(content) {
+    const fiber = createFiber(HostText, content, null);
+    return fiber;
 }
